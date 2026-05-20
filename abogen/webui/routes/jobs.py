@@ -211,6 +211,17 @@ def clear_finished_jobs() -> ResponseReturnValue:
         return render_jobs_panel()
     return redirect(url_for("main.index", _anchor="queue"))
 
+@jobs_bp.get("/<job_id>/cover")
+def job_cover(job_id: str) -> ResponseReturnValue:
+    job = get_service().get_job(job_id)
+    if not job or not job.cover_image_path:
+        abort(404)
+    cover_path = Path(job.cover_image_path)
+    if not cover_path.exists():
+        abort(404)
+    mime = getattr(job, "cover_image_mime", None) or "image/jpeg"
+    return send_file(cover_path, mimetype=mime, max_age=3600)
+
 @jobs_bp.get("/<job_id>/epub")
 def job_epub(job_id: str) -> ResponseReturnValue:
     job = get_service().get_job(job_id)

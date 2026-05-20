@@ -2,6 +2,7 @@ from typing import Any, Dict, Mapping, List, Optional
 import base64
 import uuid
 from pathlib import Path
+import httpx
 
 from flask import Blueprint, request, jsonify, send_file, url_for, current_app
 from flask.typing import ResponseReturnValue
@@ -678,3 +679,43 @@ def api_entity_pronunciation_preview() -> ResponseReturnValue:
         return jsonify({"audio_base64": audio_base64})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
+@api_bp.post("/translate")
+def translate_text() -> ResponseReturnValue:
+    data = request.get_json(force=True, silent=True) or {}
+    text = (data.get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "Texto vazio"}), 400
+    text = text[:2000]
+
+    # LibreTranslate self-hosted (se configurado)
+    settings = load_settings()
+    lt_url = (settings.get("libretranslate_url") or "").strip().rstrip("/")
+    if lt_url:
+        try:
+            resp = httpx.post(
+                f"{lt_url}/translate",
+                json={"q": text, "source": "auto", "target": "pt"},
+                timeout=10.0,
+            )
+            resp.raise_for_status()
+            translated = resp.json().get("translatedText", "")
+            if translated:
+                return jsonify({"translation": translated})
+        except Exception:
+            pass
+
+    # Fallback: MyMemory (API gratuita, sem chave)
+    try:
+        resp = httpx.get(
+            "https://api.mymemory.translated.net/get",
+            params={"q": text, "langpair": "auto|pt-BR"},
+            timeout=10.0,
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        translated = result.get("responseData", {}).get("translatedText", "")
+        return jsonify({"translation": translated or "Tradução não disponível."})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500

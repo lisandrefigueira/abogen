@@ -499,6 +499,15 @@
                 <input type="checkbox" data-role="autoscroll-toggle" checked>
                 <span>↕ Auto</span>
               </label>
+              <div class="lv-sleep">
+                <select class="lv-sleep__select" data-role="sleep-select" aria-label="Timer de sono">
+                  <option value="0">zzz</option>
+                  <option value="30">30 min</option>
+                  <option value="40">40 min</option>
+                  <option value="60">60 min</option>
+                </select>
+                <span class="lv-sleep__countdown" data-role="sleep-countdown" hidden></span>
+              </div>
             </div>
           </div>
         </div>
@@ -520,6 +529,15 @@
     <div class="reader-chapter-panel__body">
       <div class="reader-chapter-links" data-role="chapter-links" aria-label="Chapters"></div>
     </div>
+  </aside>
+  <button type="button" class="lv-translate-btn" data-role="translate-trigger" hidden>🌐 Traduzir</button>
+  <aside class="lv-translate-panel" data-role="translate-panel" hidden>
+    <div class="lv-translate-panel__header">
+      <span>Tradução</span>
+      <button type="button" class="lv-translate-panel__close" data-action="close-translate">✕</button>
+    </div>
+    <div class="lv-translate-panel__original" data-role="translate-original"></div>
+    <div class="lv-translate-panel__result" data-role="translate-result">Selecione um trecho para traduzir.</div>
   </aside>
   <script type="application/json" id="reader-data">{{ {'chapters': chapters, 'title': display_title or job.original_filename, 'chapterTimings': chapter_timings}|tojson }}</script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -2090,6 +2108,112 @@
         });
       });
     }
+
+    // ── LeitorVoz: Sleep timer ──
+    const sleepSelect = document.querySelector('[data-role="sleep-select"]');
+    const sleepCountdown = document.querySelector('[data-role="sleep-countdown"]');
+    let sleepTimerId = null;
+    let sleepCountdownId = null;
+    let sleepEndTime = null;
+
+    const clearSleepTimer = () => {
+      if (sleepTimerId) { clearTimeout(sleepTimerId); sleepTimerId = null; }
+      if (sleepCountdownId) { clearInterval(sleepCountdownId); sleepCountdownId = null; }
+      sleepEndTime = null;
+      if (sleepCountdown) { sleepCountdown.hidden = true; sleepCountdown.textContent = ''; }
+    };
+
+    const startSleepTimer = (minutes) => {
+      clearSleepTimer();
+      if (!minutes || !audioEl) return;
+      const ms = minutes * 60 * 1000;
+      sleepEndTime = Date.now() + ms;
+      sleepCountdownId = setInterval(() => {
+        const remaining = sleepEndTime - Date.now();
+        if (remaining <= 0) { clearInterval(sleepCountdownId); return; }
+        const m = Math.floor(remaining / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        if (sleepCountdown) {
+          sleepCountdown.hidden = false;
+          sleepCountdown.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+        }
+      }, 1000);
+      const FADE_DURATION = 10000;
+      const delay = ms > FADE_DURATION ? ms - FADE_DURATION : 0;
+      sleepTimerId = setTimeout(() => {
+        if (!audioEl || audioEl.paused) { clearSleepTimer(); if (sleepSelect) sleepSelect.value = '0'; return; }
+        const startVol = audioEl.volume;
+        const startTime = Date.now();
+        const fadeId = setInterval(() => {
+          const progress = Math.min((Date.now() - startTime) / FADE_DURATION, 1);
+          audioEl.volume = startVol * (1 - progress);
+          if (progress >= 1) {
+            clearInterval(fadeId);
+            audioEl.pause();
+            audioEl.volume = startVol;
+            clearSleepTimer();
+            if (sleepSelect) sleepSelect.value = '0';
+          }
+        }, 100);
+      }, delay);
+    };
+
+    sleepSelect?.addEventListener('change', () => {
+      const minutes = parseInt(sleepSelect.value, 10);
+      if (!minutes) { clearSleepTimer(); return; }
+      startSleepTimer(minutes);
+    });
+
+    // ── LeitorVoz: Translation panel ──
+    const translateTrigger = document.querySelector('[data-role="translate-trigger"]');
+    const translatePanel = document.querySelector('[data-role="translate-panel"]');
+    const translateOriginalEl = document.querySelector('[data-role="translate-original"]');
+    const translateResultEl = document.querySelector('[data-role="translate-result"]');
+    const translateCloseBtn = document.querySelector('[data-action="close-translate"]');
+    let translateDebounce = null;
+
+    const closeTranslatePanel = () => {
+      if (translatePanel) translatePanel.hidden = true;
+      if (translateTrigger) translateTrigger.hidden = true;
+    };
+
+    translateCloseBtn?.addEventListener('click', closeTranslatePanel);
+
+    const doTranslate = async (text) => {
+      if (translateOriginalEl) translateOriginalEl.textContent = text;
+      if (translateResultEl) translateResultEl.textContent = 'Traduzindo…';
+      if (translatePanel) translatePanel.hidden = false;
+      try {
+        const resp = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+        const data = await resp.json();
+        if (translateResultEl) translateResultEl.textContent = data.translation || data.error || 'Erro na tradução.';
+      } catch {
+        if (translateResultEl) translateResultEl.textContent = 'Erro ao conectar ao serviço de tradução.';
+      }
+    };
+
+    translateTrigger?.addEventListener('click', () => {
+      const sel = window.getSelection()?.toString().trim();
+      if (sel) doTranslate(sel);
+    });
+
+    document.addEventListener('selectionchange', () => {
+      clearTimeout(translateDebounce);
+      translateDebounce = setTimeout(() => {
+        const sel = window.getSelection()?.toString().trim();
+        if (sel && sel.length > 2) {
+          if (translateTrigger) translateTrigger.hidden = false;
+        } else if (translatePanel && !translatePanel.hidden) {
+          // keep panel open if already showing a result
+        } else {
+          if (translateTrigger) translateTrigger.hidden = true;
+        }
+      }, 300);
+    });
 
     init().catch((error) => {
       console.error('Failed to initialize reader', error);

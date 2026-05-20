@@ -1,9 +1,9 @@
 from abogen.utils import get_version
 
 # Program Information
-PROGRAM_NAME = "abogen"
-PROGRAM_DESCRIPTION = "Generate audiobooks from EPUBs, PDFs, text and subtitles with synchronized captions."
-GITHUB_URL = "https://github.com/denizsafak/abogen"
+PROGRAM_NAME = "LeitorVoz"
+PROGRAM_DESCRIPTION = "Leia e ouça seus livros em português com narração sincronizada."
+GITHUB_URL = "https://github.com/lisandrefigueira/abogen"
 VERSION = get_version()
 
 # Settings
@@ -16,17 +16,9 @@ SUBTITLE_FORMATS = [
     ("ass_centered_narrow", "ASS (centered narrow)"),
 ]
 
-# Language description mapping
+# Language description mapping — LeitorVoz: apenas Português Brasileiro
 LANGUAGE_DESCRIPTIONS = {
-    "a": "American English",
-    "b": "British English",
-    "e": "Spanish",
-    "f": "French",
-    "h": "Hindi",
-    "i": "Italian",
-    "j": "Japanese",
-    "p": "Brazilian Portuguese",
-    "z": "Mandarin Chinese",
+    "p": "Português Brasileiro",
 }
 
 # Supported sound formats
@@ -63,75 +55,16 @@ SUPPORTED_INPUT_FORMATS = [
 # 384 if self.lang_code in 'ab':
 SUPPORTED_LANGUAGES_FOR_SUBTITLE_GENERATION = list(LANGUAGE_DESCRIPTIONS.keys())
 
-# Voice and sample text constants
+# Vozes disponíveis — LeitorVoz: apenas pt-BR
 VOICES_INTERNAL = [
-    "af_alloy",
-    "af_aoede",
-    "af_bella",
-    "af_heart",
-    "af_jessica",
-    "af_kore",
-    "af_nicole",
-    "af_nova",
-    "af_river",
-    "af_sarah",
-    "af_sky",
-    "am_adam",
-    "am_echo",
-    "am_eric",
-    "am_fenrir",
-    "am_liam",
-    "am_michael",
-    "am_onyx",
-    "am_puck",
-    "am_santa",
-    "bf_alice",
-    "bf_emma",
-    "bf_isabella",
-    "bf_lily",
-    "bm_daniel",
-    "bm_fable",
-    "bm_george",
-    "bm_lewis",
-    "ef_dora",
-    "em_alex",
-    "em_santa",
-    "ff_siwis",
-    "hf_alpha",
-    "hf_beta",
-    "hm_omega",
-    "hm_psi",
-    "if_sara",
-    "im_nicola",
-    "jf_alpha",
-    "jf_gongitsune",
-    "jf_nezumi",
-    "jf_tebukuro",
-    "jm_kumo",
-    "pf_dora",
-    "pm_alex",
-    "pm_santa",
-    "zf_xiaobei",
-    "zf_xiaoni",
-    "zf_xiaoxiao",
-    "zf_xiaoyi",
-    "zm_yunjian",
-    "zm_yunxi",
-    "zm_yunxia",
-    "zm_yunyang",
+    "pf_dora",   # feminina
+    "pm_alex",   # masculina
+    "pm_santa",  # masculina alternativa
 ]
 
-# Voice and sample text mapping
+# Texto de exemplo para pré-visualização de voz
 SAMPLE_VOICE_TEXTS = {
-    "a": "This is a sample of the selected voice.",
-    "b": "This is a sample of the selected voice.",
-    "e": "Este es una muestra de la voz seleccionada.",
-    "f": "Ceci est un exemple de la voix sélectionnée.",
-    "h": "यह चयनित आवाज़ का एक नमूना है।",
-    "i": "Questo è un esempio della voce selezionata.",
-    "j": "これは選択した声のサンプルです。",
-    "p": "Este é um exemplo da voz selecionada.",
-    "z": "这是所选语音的示例。",
+    "p": "Era uma vez, numa cidade à beira-mar, um velho contador de histórias que nunca se cansava de narrar.",
 }
 
 COLORS = {

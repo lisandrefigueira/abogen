@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}abogen · Dashboard{% endblock %}
+{% block title %}LeitorVoz · Início{% endblock %}
 
 {% block content %}
 <style>
@@ -40,41 +40,38 @@
 <section class="stats-overview">
   <div class="stat-card">
     <span class="stat-card__value">{{ stats.total }}</span>
-    <span class="stat-card__label">Total Jobs</span>
+    <span class="stat-card__label">Total</span>
   </div>
   <div class="stat-card">
     <span class="stat-card__value">{{ stats.completed }}</span>
-    <span class="stat-card__label">Converted</span>
+    <span class="stat-card__label">Concluídos</span>
   </div>
   <div class="stat-card">
     <span class="stat-card__value">{{ stats.running }}</span>
-    <span class="stat-card__label">Converting</span>
+    <span class="stat-card__label">Convertendo</span>
   </div>
   <div class="stat-card">
     <span class="stat-card__value">{{ stats.pending }}</span>
-    <span class="stat-card__label">Pending</span>
+    <span class="stat-card__label">Aguardando</span>
   </div>
   <div class="stat-card">
     <span class="stat-card__value">{{ stats.failed }}</span>
-    <span class="stat-card__label">Failed</span>
+    <span class="stat-card__label">Falhou</span>
   </div>
 </section>
 
 <section class="card card--workflow">
-  <h1 class="card__title">Create a New Audiobook</h1>
-  <p class="card__subtitle">Kick off a fresh conversion with your manuscript or pasted text. You can fine-tune chapters and entities in the next steps.</p>
-  <div class="upload-card__dropzone" data-role="upload-dropzone" tabindex="0" role="button" aria-label="Open upload settings or drop a manuscript file">
+  <h1 class="card__title">Criar novo audiobook</h1>
+  <p class="card__subtitle">Converta seu livro em narração em português. Ajuste capítulos e configurações nas próximas etapas.</p>
+  <div class="upload-card__dropzone" data-role="upload-dropzone" tabindex="0" role="button" aria-label="Abrir configurações ou soltar arquivo aqui">
     <div class="upload-card__dropzone-content">
       <span class="upload-card__icon" aria-hidden="true">&uarr;</span>
-      <p class="upload-card__headline">Drop your manuscript to begin</p>
-      <p class="upload-card__hint">Drag &amp; drop a supported file here, or click to choose one in the next step.</p>
+      <p class="upload-card__headline">Arraste seu livro aqui para começar</p>
+      <p class="upload-card__hint">Solte um arquivo EPUB, PDF ou TXT aqui, ou clique para escolher.</p>
       <p class="upload-card__filename" data-role="upload-dropzone-filename" hidden></p>
-      <button type="button" class="button" data-role="open-upload-modal">Open upload &amp; settings</button>
+      <button type="button" class="button" data-role="open-upload-modal">Abrir configurações</button>
       {% if opds_available %}
-          <div class="wizard-card__body">
-      <p>Upload an EPUB or text file to begin.</p>
-      <a class="button button--ghost" href="{{ url_for('books.find_books_page') }}">Browse Calibre library</a>
-    </div>
+        <a class="button button--ghost" href="{{ url_for('books.find_books_page') }}">Buscar na biblioteca Calibre</a>
       {% endif %}
     </div>
   </div>

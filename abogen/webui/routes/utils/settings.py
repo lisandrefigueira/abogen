@@ -172,9 +172,10 @@ def settings_defaults() -> Dict[str, Any]:
     return {
         "output_format": "wav",
         "subtitle_format": "srt",
+        "language": "p",
         "save_mode": "default_output" if has_output_override() else "save_next_to_input",
         "default_speaker": "",
-        "default_voice": VOICES_INTERNAL[0] if VOICES_INTERNAL else "",
+        "default_voice": VOICES_INTERNAL[0] if VOICES_INTERNAL else "pf_dora",
         "supertonic_total_steps": 5,
         "supertonic_speed": 1.0,
         "replace_single_newlines": False,

@@ -359,6 +359,67 @@
       box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
       border-radius: 6px;
     }
+
+    /* ── LeitorVoz: player estilo Speechify ── */
+    audio { display: none; }
+
+    .lv-player { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .lv-progress-row {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .lv-time {
+      font-size: 0.78rem; color: rgba(226,232,240,0.65);
+      font-variant-numeric: tabular-nums; min-width: 3.2rem; white-space: nowrap;
+    }
+    .lv-time--right { text-align: right; }
+    .lv-progress-wrap { flex: 1; display: flex; align-items: center; }
+    .lv-progress-bar {
+      width: 100%; height: 4px; cursor: pointer;
+      accent-color: var(--accent);
+      background: transparent;
+    }
+
+    .lv-controls-row {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 0.5rem;
+    }
+    .lv-chapter-info {
+      font-size: 0.78rem; color: rgba(226,232,240,0.55);
+      min-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .lv-controls { display: flex; align-items: center; gap: 0.25rem; }
+    .lv-btn {
+      border: none; background: none; color: var(--text); cursor: pointer;
+      padding: 0.35rem 0.55rem; border-radius: 8px; font-size: 0.95rem;
+      display: flex; align-items: center; gap: 0.2rem;
+      transition: background 0.15s ease;
+      line-height: 1;
+    }
+    .lv-btn:hover:not(:disabled) { background: rgba(56,189,248,0.15); }
+    .lv-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .lv-btn--play {
+      background: var(--accent); color: #0f172a;
+      width: 2.8rem; height: 2.8rem; border-radius: 999px;
+      font-size: 1.15rem; justify-content: center; padding: 0;
+      box-shadow: 0 4px 14px rgba(56,189,248,0.35);
+    }
+    .lv-btn--play:hover:not(:disabled) { background: #7dd3fc; }
+    .lv-btn__sub { font-size: 0.62rem; line-height: 1; }
+    .lv-side {
+      display: flex; align-items: center; gap: 0.5rem;
+      min-width: 110px; justify-content: flex-end;
+    }
+    .lv-btn--speed {
+      font-size: 0.8rem; border: 1px solid var(--border);
+      padding: 0.25rem 0.6rem; border-radius: 999px;
+    }
+    .lv-autoscroll {
+      display: flex; align-items: center; gap: 0.3rem;
+      cursor: pointer; font-size: 0.78rem; color: rgba(226,232,240,0.6);
+      user-select: none;
+    }
+    .lv-autoscroll input { accent-color: var(--accent); cursor: pointer; }
   </style>
 </head>
 <body
@@ -368,24 +429,24 @@
   <div class="reader-shell" data-role="reader-shell">
     <div class="reader-toolbar">
       <div class="reader-toolbar__group">
-        <button type="button" data-action="prev">Previous</button>
-        <select data-role="reader-chapter" aria-label="Select chapter"></select>
+        <button type="button" data-action="prev">Anterior</button>
+        <select data-role="reader-chapter" aria-label="Selecionar capítulo"></select>
       </div>
       <div class="reader-toolbar__title" data-role="reader-title">{{ display_title or job.original_filename }}</div>
       <div class="reader-toolbar__group reader-toolbar__group--end">
-        <button type="button" data-action="next">Next</button>
+        <button type="button" data-action="next">Próximo</button>
         <button
           type="button"
           class="reader-toolbar__icon"
           data-action="toggle-chapters"
-          aria-label="Toggle chapter list"
+          aria-label="Lista de capítulos"
           aria-expanded="false"
           aria-controls="reader-chapter-panel"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M4 7h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
           </svg>
-          <span class="visually-hidden">Toggle chapter list</span>
+          <span class="visually-hidden">Lista de capítulos</span>
         </button>
       </div>
     </div>
@@ -395,35 +456,61 @@
     <div class="reader-footer">
       {% if audio_url %}
       <div class="reader-player" data-role="reader-player">
-        <audio controls preload="metadata" src="{{ audio_url }}"></audio>
-        <div class="reader-player__controls">
-          <button type="button" data-action="player-prev" aria-label="Go to previous chapter">Prev chapter</button>
-          <button type="button" data-action="player-rewind" aria-label="Rewind 15 seconds">-15s</button>
-          <button type="button" data-action="player-toggle" aria-label="Play or pause audio">Play</button>
-          <button type="button" data-action="player-forward" aria-label="Skip forward 15 seconds">+15s</button>
-          <button type="button" data-action="player-next" aria-label="Go to next chapter">Next chapter</button>
-        </div>
-        <div class="reader-player__secondary">
-          <label for="reader-playback-rate">Speed</label>
-          <select id="reader-playback-rate" data-role="playback-rate">
-            <option value="0.75">0.75x</option>
-            <option value="0.9">0.90x</option>
-            <option value="1" selected>1.00x</option>
-            <option value="1.25">1.25x</option>
-            <option value="1.5">1.50x</option>
-            <option value="1.75">1.75x</option>
-            <option value="2">2.00x</option>
-          </select>
+        <audio preload="metadata" src="{{ audio_url }}"></audio>
+
+        <div class="lv-player">
+          <!-- Barra de progresso -->
+          <div class="lv-progress-row">
+            <span class="lv-time" data-role="time-elapsed">0:00</span>
+            <div class="lv-progress-wrap">
+              <input type="range" class="lv-progress-bar" data-role="progress-bar"
+                     min="0" max="100" step="0.05" value="0"
+                     aria-label="Posição no áudio">
+            </div>
+            <span class="lv-time lv-time--right" data-role="time-remaining">-0:00</span>
+          </div>
+
+          <!-- Controles -->
+          <div class="lv-controls-row">
+            <span class="lv-chapter-info" data-role="chapter-info">Capítulo 1</span>
+
+            <div class="lv-controls">
+              <button type="button" class="lv-btn" data-action="player-prev"
+                      aria-label="Capítulo anterior" title="Capítulo anterior">⏮</button>
+              <button type="button" class="lv-btn" data-action="player-rewind"
+                      aria-label="Voltar 10 segundos">
+                ⏪<span class="lv-btn__sub">10s</span>
+              </button>
+              <button type="button" class="lv-btn lv-btn--play" data-action="player-toggle"
+                      aria-label="Reproduzir ou pausar">▶</button>
+              <button type="button" class="lv-btn" data-action="player-forward"
+                      aria-label="Avançar 10 segundos">
+                ⏩<span class="lv-btn__sub">10s</span>
+              </button>
+              <button type="button" class="lv-btn" data-action="player-next"
+                      aria-label="Próximo capítulo" title="Próximo capítulo">⏭</button>
+            </div>
+
+            <div class="lv-side">
+              <button type="button" class="lv-btn lv-btn--speed"
+                      data-action="cycle-speed" data-role="speed-display"
+                      aria-label="Velocidade de reprodução">1×</button>
+              <label class="lv-autoscroll" title="Rolagem automática acompanha a narração">
+                <input type="checkbox" data-role="autoscroll-toggle" checked>
+                <span>↕ Auto</span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
       {% endif %}
-      <div class="reader-status" data-role="reader-status" aria-live="polite">Loading EPUB…</div>
+      <div class="reader-status" data-role="reader-status" aria-live="polite">Carregando EPUB…</div>
     </div>
   </div>
   <aside class="reader-chapter-panel" data-role="chapter-panel" id="reader-chapter-panel" aria-hidden="true">
     <div class="reader-chapter-panel__header">
-      <span class="reader-chapter-panel__title">Chapters</span>
-      <button type="button" class="reader-toolbar__icon" data-action="close-chapter-panel" aria-label="Close chapter list">
+      <span class="reader-chapter-panel__title">Capítulos</span>
+      <button type="button" class="reader-toolbar__icon" data-action="close-chapter-panel" aria-label="Fechar lista de capítulos">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M6.2 5.2 5.2 6.2 11 12l-5.8 5.8 1 1L12 13l5.8 5.8 1-1L13 12l5.8-5.8-1-1L12 11 6.2 5.2z" />
         </svg>
@@ -471,7 +558,7 @@
     }
 
     const ACTIVE_CLASS = 'chunk--active';
-    const PLAYER_SKIP_SECONDS = 15;
+    const PLAYER_SKIP_SECONDS = 10;
     const syncCache = new Map();
 
     const setStatus = (message) => {
@@ -1003,10 +1090,10 @@
       if (playerToggleBtn) {
         if (!audioEl) {
           playerToggleBtn.disabled = true;
-          playerToggleBtn.textContent = 'Play';
+          playerToggleBtn.textContent = '▶';
         } else {
           playerToggleBtn.disabled = false;
-          playerToggleBtn.textContent = audioEl.paused ? 'Play' : 'Pause';
+          playerToggleBtn.textContent = audioEl.paused ? '▶' : '⏸';
         }
       }
       if (playbackRateSelect) {
@@ -1041,7 +1128,7 @@
       if (!chapters.length) {
         const placeholder = document.createElement('span');
         placeholder.className = 'reader-chapter-links__empty';
-        placeholder.textContent = 'No chapters available.';
+        placeholder.textContent = 'Sem capítulos disponíveis.';
         chapterLinksEl.append(placeholder);
         return;
       }
@@ -1049,7 +1136,7 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.dataset.chapterIndex = String(idx);
-        const label = chapter.title || `Chapter ${idx + 1}`;
+        const label = chapter.title || `Capítulo ${idx + 1}`;
         button.textContent = label;
         button.title = label;
         chapterLinksEl.append(button);
@@ -1068,26 +1155,22 @@
       const parts = [];
       if (chapters.length) {
         const position = Math.min(currentChapterIndex + 1, chapters.length);
-        parts.push(`Chapter ${position} of ${chapters.length}`);
+        parts.push(`Capítulo ${position} de ${chapters.length}`);
       } else {
-        parts.push('No chapters loaded');
+        parts.push('Sem capítulos');
       }
       if (audioEl) {
         const currentTime = formatClock(audioEl.currentTime || 0);
         const hasDuration = Number.isFinite(audioEl.duration);
         if (hasDuration) {
-          parts.push(`Audio ${currentTime} / ${formatClock(audioEl.duration)}`);
+          parts.push(`${currentTime} / ${formatClock(audioEl.duration)}`);
         } else {
-          parts.push(`Audio ${currentTime}`);
+          parts.push(currentTime);
         }
         if (currentSync.length) {
-          if (activeOverlay) {
-            parts.push(`Chunk ${activeOverlay.index + 1}/${currentSync.length}`);
-          } else {
-            parts.push('Sync ready');
+          if (!activeOverlay) {
+            parts.push('Sincronizado');
           }
-        } else {
-          parts.push('Sync unavailable');
         }
       }
       statusEl.textContent = parts.join(' • ');
@@ -1406,7 +1489,7 @@
       navigationLock = true;
       let failed = false;
       let resolvedStart = null;
-      setStatus('Loading chapter…');
+      setStatus('Carregando capítulo…');
       highlightChunk(null);
       activeOverlay = null;
       updateStatus();
@@ -1481,7 +1564,7 @@
       } catch (error) {
         failed = true;
         console.error('Failed to display chapter', error);
-        setStatus('Unable to display this chapter.');
+        setStatus('Não foi possível exibir este capítulo.');
       } finally {
         suppressRelocate = false;
         navigationLock = false;
@@ -1535,27 +1618,27 @@
       if (!epubUrl) {
         initializeChapters();
         updateControls();
-        setStatus('EPUB asset unavailable for this job.');
+        setStatus('EPUB não disponível para este trabalho. Gere o EPUB 3 nas configurações.');
         return;
       }
       if (typeof window.ePub !== 'function') {
         initializeChapters();
         updateControls();
-        setStatus('EPUB.js failed to load.');
+        setStatus('Falha ao carregar leitor de EPUB.');
         return;
       }
 
       const jszipLib = await ensureJsZip();
       if (!jszipLib) {
-        setStatus('JSZip could not be loaded. Please check your network connection.');
+        setStatus('Não foi possível carregar JSZip. Verifique sua conexão.');
         return;
       }
 
-      setStatus('Fetching EPUB…');
+      setStatus('Buscando EPUB…');
       let epubPayload = null;
 
       const fetchTimeout = setTimeout(() => {
-        setStatus('Still fetching EPUB… this may take a moment for large books.');
+        setStatus('Ainda buscando EPUB… pode demorar um pouco para livros grandes.');
       }, 4000);
 
       try {
@@ -1606,7 +1689,7 @@
         requestCredentials: 'same-origin',
       });
 
-      setStatus('Loading book…');
+      setStatus('Abrindo livro…');
 
       let openError = null;
       try {
@@ -1761,7 +1844,7 @@
         }
       });
 
-      setStatus('Preparing viewer…');
+      setStatus('Preparando leitor…');
       await displayChapter(currentChapterIndex, { scroll: false, force: true });
       updateStatus();
     };
@@ -1946,9 +2029,71 @@
 
     updatePlaybackControls();
 
+    // ── LeitorVoz: novos controles estilo Speechify ──
+    const progressBarEl = document.querySelector('[data-role="progress-bar"]');
+    const timeElapsedEl = document.querySelector('[data-role="time-elapsed"]');
+    const timeRemainingEl = document.querySelector('[data-role="time-remaining"]');
+    const chapterInfoEl = document.querySelector('[data-role="chapter-info"]');
+    const autoscrollToggle = document.querySelector('[data-role="autoscroll-toggle"]');
+    const speedDisplayBtn = document.querySelector('[data-role="speed-display"]');
+
+    let autoScrollEnabled = true;
+    const SPEED_STEPS = [0.75, 1, 1.25, 1.5, 2];
+    let speedStepIdx = 1;
+
+    const updateProgress = () => {
+      if (!audioEl) return;
+      const cur = audioEl.currentTime || 0;
+      const dur = Number.isFinite(audioEl.duration) ? audioEl.duration : 0;
+      if (progressBarEl && dur > 0) progressBarEl.value = (cur / dur) * 100;
+      if (timeElapsedEl) timeElapsedEl.textContent = formatClock(cur);
+      if (timeRemainingEl && dur > 0) timeRemainingEl.textContent = `-${formatClock(dur - cur)}`;
+      if (chapterInfoEl && chapters.length) {
+        chapterInfoEl.textContent = `Cap. ${Math.min(currentChapterIndex + 1, chapters.length)} de ${chapters.length}`;
+      }
+    };
+
+    if (audioEl) {
+      audioEl.addEventListener('timeupdate', updateProgress);
+      audioEl.addEventListener('loadedmetadata', updateProgress);
+    }
+
+    progressBarEl?.addEventListener('input', () => {
+      if (!audioEl || !Number.isFinite(audioEl.duration) || audioEl.duration <= 0) return;
+      const t = (parseFloat(progressBarEl.value) / 100) * audioEl.duration;
+      audioEl.currentTime = t;
+      syncToTime(t, { force: true, scroll: false });
+      updateProgress();
+    });
+
+    autoscrollToggle?.addEventListener('change', () => {
+      autoScrollEnabled = Boolean(autoscrollToggle.checked);
+    });
+
+    speedDisplayBtn?.addEventListener('click', () => {
+      speedStepIdx = (speedStepIdx + 1) % SPEED_STEPS.length;
+      const spd = SPEED_STEPS[speedStepIdx];
+      if (audioEl) audioEl.playbackRate = spd;
+      speedDisplayBtn.textContent = `${spd % 1 === 0 ? spd : spd}×`;
+    });
+
+    // Substituição do scheduleSync para suportar autoscroll
+    const origScheduleSync = scheduleSync;
+    if (audioEl) {
+      audioEl.removeEventListener('timeupdate', scheduleSync);
+      audioEl.addEventListener('timeupdate', () => {
+        if (scheduledSync) return;
+        scheduledSync = window.requestAnimationFrame(() => {
+          scheduledSync = 0;
+          syncToTime(audioEl.currentTime || 0, { scroll: autoScrollEnabled });
+          updateProgress();
+        });
+      });
+    }
+
     init().catch((error) => {
       console.error('Failed to initialize reader', error);
-      setStatus('Reader failed to initialize.');
+      setStatus('Falha ao inicializar o leitor.');
     });
   </script>
 </body>

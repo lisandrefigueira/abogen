@@ -180,84 +180,79 @@
   <input type="hidden" name="pending_id" value="{{ pending.id if pending else '' }}">
   <div class="modal__body wizard-card__body upload-form__sections">
     <section class="form-section">
-      <h3 class="form-section__title">Manuscript &amp; subtitles</h3>
+      <h3 class="form-section__title">Arquivo e legendas</h3>
+      {# Idioma fixo: Português Brasileiro #}
+      <input type="hidden" name="language" value="p">
       <div class="field-grid field-grid--compact">
         <div class="field field--file field--span-2">
-          <label for="source_file">Source file</label>
+          <label for="source_file">Arquivo</label>
           <input type="file" id="source_file" name="source_file" accept=".txt,.pdf,.epub,.md,.markdown" {{ 'disabled' if readonly else '' }}>
           {% if pending %}
-          <p class="hint">Current file: {{ pending.original_filename }}</p>
+          <p class="hint">Arquivo atual: {{ pending.original_filename }}</p>
           {% endif %}
         </div>
         <div class="field">
-          <label for="language">Language</label>
-          <select id="language" name="language" {{ 'disabled' if readonly else '' }}>
-            {% for key, label in options.languages.items() %}
-            <option value="{{ key }}" {% if key == language_value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label for="subtitle_mode">Subtitle mode</label>
+          <label for="subtitle_mode">Modo de legenda</label>
           <select id="subtitle_mode" name="subtitle_mode" {{ 'disabled' if readonly else '' }}>
             {% set subtitle_options = ['Disabled', 'Sentence', 'Sentence + Comma', 'Sentence + Highlighting'] %}
+            {% set subtitle_labels_pt = {'Disabled': 'Desativado', 'Sentence': 'Por sentença', 'Sentence + Comma': 'Sentença + vírgula', 'Sentence + Highlighting': 'Sentença + destaque'} %}
             {% for option in subtitle_options %}
-            <option value="{{ option }}" {% if subtitle_value == option %}selected{% endif %}>{{ option }}</option>
+            <option value="{{ option }}" {% if subtitle_value == option %}selected{% endif %}>{{ subtitle_labels_pt.get(option, option) }}</option>
             {% endfor %}
             {% for i in range(1, 11) %}
             {% set label = i ~ ' ' ~ ('word' if i == 1 else 'words') %}
-            <option value="{{ label }}" {% if subtitle_value == label %}selected{% endif %}>{{ label }}</option>
+            <option value="{{ label }}" {% if subtitle_value == label %}selected{% endif %}>{{ i }} {{ 'palavra' if i == 1 else 'palavras' }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="field field--stack field--span-2">
-          <span class="field__caption">Additional outputs</span>
+          <span class="field__caption">Saídas adicionais</span>
           <label class="toggle-pill">
             <input type="checkbox" name="generate_epub3" value="true" {% if generate_epub3 %}checked{% endif %} {{ 'disabled' if readonly else '' }}>
-            <span>Generate EPUB 3 (experimental)</span>
+            <span>Gerar EPUB 3 com narração sincronizada (experimental)</span>
           </label>
-          <p class="hint">Creates a synchronized EPUB alongside audio output.</p>
+          <p class="hint">Cria um EPUB sincronizado junto com o áudio — necessário para o leitor integrado.</p>
         </div>
       </div>
     </section>
 
     <section class="form-section">
-      <h3 class="form-section__title">Book Metadata</h3>
+      <h3 class="form-section__title">Metadados do livro</h3>
       <div class="field-grid field-grid--compact">
         <div class="field field--span-2">
-          <label for="meta_title">Title</label>
+          <label for="meta_title">Título</label>
           <input type="text" id="meta_title" name="meta_title" value="{{ metadata.get('title', '') }}" {{ 'disabled' if readonly else '' }}>
         </div>
         <div class="field field--span-2">
-          <label for="meta_subtitle">Subtitle</label>
+          <label for="meta_subtitle">Subtítulo</label>
           <input type="text" id="meta_subtitle" name="meta_subtitle" value="{{ metadata.get('subtitle', '') }}" {{ 'disabled' if readonly else '' }}>
         </div>
         <div class="field field--span-2">
-          <label for="meta_author">Author(s)</label>
+          <label for="meta_author">Autor(es)</label>
           <input type="text" id="meta_author" name="meta_author" value="{{ metadata.get('authors', '') or metadata.get('author', '') }}" {{ 'disabled' if readonly else '' }}>
-          <p class="hint">Comma separated for multiple authors</p>
+          <p class="hint">Separe múltiplos autores por vírgula</p>
         </div>
         <div class="field">
-          <label for="meta_series">Series</label>
+          <label for="meta_series">Série</label>
           <input type="text" id="meta_series" name="meta_series" value="{{ metadata.get('series', '') or metadata.get('series_name', '') }}" {{ 'disabled' if readonly else '' }}>
         </div>
         <div class="field">
-          <label for="meta_series_index">Series Index</label>
+          <label for="meta_series_index">Volume da série</label>
           <input type="text" id="meta_series_index" name="meta_series_index" value="{{ metadata.get('series_index', '') or metadata.get('series_sequence', '') }}" {{ 'disabled' if readonly else '' }}>
         </div>
         <div class="field field--span-2">
-          <label for="meta_publisher">Publisher</label>
+          <label for="meta_publisher">Editora</label>
           <input type="text" id="meta_publisher" name="meta_publisher" value="{{ metadata.get('publisher', '') }}" {{ 'disabled' if readonly else '' }}>
         </div>
         <div class="field field--span-2">
-            <label for="meta_description">Description</label>
+            <label for="meta_description">Descrição</label>
             <textarea id="meta_description" name="meta_description" rows="3" {{ 'disabled' if readonly else '' }}>{{ metadata.get('description', '') or metadata.get('summary', '') }}</textarea>
         </div>
          <div class="field field--stack field--span-2">
           <label class="toggle-pill">
             <input type="hidden" name="remove_cover" value="false">
             <input type="checkbox" name="remove_cover" value="true" {{ 'disabled' if readonly else '' }}>
-            <span>Remove Cover Image</span>
+            <span>Remover capa</span>
           </label>
           {% if pending and pending.cover_image_path %}
             <p class="hint">Cover image currently exists.</p>
@@ -269,16 +264,16 @@
     </section>
 
     <section class="form-section">
-      <h3 class="form-section__title">Narrator defaults</h3>
+      <h3 class="form-section__title">Narrador</h3>
       <div class="form-section__layout form-section__layout--split">
         <div class="form-section__group">
           <div class="field">
-            <label for="voice_profile">Voice profile</label>
+            <label for="voice_profile">Perfil de voz</label>
             <select id="voice_profile" name="voice_profile" data-role="voice-profile" {{ 'disabled' if readonly else '' }}>
-              <option value="__standard" {% if profile_value == '__standard' %}selected{% endif %}>Standard voice</option>
-              <option value="__formula" {% if profile_value == '__formula' %}selected{% endif %}>Custom voice formula</option>
+              <option value="__standard" {% if profile_value == '__standard' %}selected{% endif %}>Voz padrão</option>
+              <option value="__formula" {% if profile_value == '__formula' %}selected{% endif %}>Fórmula de voz personalizada</option>
               {% if options.voice_profile_options %}
-              <optgroup label="Saved mixes">
+              <optgroup label="Misturas salvas">
                 {% for profile in options.voice_profile_options %}
                 <option value="{{ profile.name }}" data-language="{{ profile.language }}" data-formula="{{ profile.formula|e }}" {% if profile_value == profile.name %}selected{% endif %}>{{ profile.name }}{% if profile.language %} ({{ profile.language|upper }}){% endif %}</option>
                 {% endfor %}
@@ -287,7 +282,7 @@
             </select>
           </div>
           <div class="field" data-role="voice-field" {% if profile_value != '__standard' %}hidden aria-hidden="true"{% endif %}>
-            <label for="voice">Voice</label>
+            <label for="voice">Voz</label>
             <select id="voice" name="voice" data-role="voice-select" data-default="{{ narrator_voice or settings_dict.get('default_voice', '') }}" {{ 'disabled' if readonly else '' }}>
               {% for voice in options.voices %}
               <option value="{{ voice }}" {% if narrator_voice == voice and profile_value == '__standard' %}selected{% endif %}>{{ voice }}</option>
@@ -295,19 +290,19 @@
             </select>
           </div>
           <div class="field" data-conditional="formula" data-role="formula-field" {% if profile_value != '__formula' %}hidden aria-hidden="true"{% endif %}>
-            <label for="voice_formula">Custom voice formula</label>
-            <input type="text" id="voice_formula" name="voice_formula" placeholder="af_nova*0.4+am_liam*0.6" data-role="voice-formula" value="{{ voice_formula_value }}" {{ 'disabled' if readonly else '' }}>
+            <label for="voice_formula">Fórmula de voz personalizada</label>
+            <input type="text" id="voice_formula" name="voice_formula" placeholder="pf_dora*0.7+pm_alex*0.3" data-role="voice-formula" value="{{ voice_formula_value }}" {{ 'disabled' if readonly else '' }}>
           </div>
         </div>
         <div class="form-section__group">
           <div class="field field--slider">
-            <label for="speed">Speed <span class="tag" id="speed_value">{{ speed_display }}×</span></label>
+            <label for="speed">Velocidade <span class="tag" id="speed_value">{{ speed_display }}×</span></label>
             <input type="range" id="speed" name="speed" min="0.6" max="1.4" step="0.05" value="{{ speed_display }}" {{ 'disabled' if readonly else '' }} oninput="document.getElementById('speed_value').textContent = Number.parseFloat(this.value).toFixed(2) + '×';">
           </div>
           <div class="field field--with-action field--preview" data-role="voice-preview">
             <div class="field__label-row">
               <span class="field__label">Preview</span>
-              <button type="button" class="button button--ghost button--small" data-role="voice-preview-button" {{ 'disabled' if readonly else '' }}>Preview voice</button>
+              <button type="button" class="button button--ghost button--small" data-role="voice-preview-button" {{ 'disabled' if readonly else '' }}>Pré-ouvir voz</button>
             </div>
             <p class="hint field__status" data-role="voice-preview-status" aria-live="polite" hidden></p>
             <audio class="voice-preview__audio" data-role="voice-preview-audio" controls preload="none" hidden></audio>
@@ -317,7 +312,7 @@
     </section>
 
     <section class="form-section">
-      <h3 class="form-section__title">Text normalization</h3>
+      <h3 class="form-section__title">Normalização de texto</h3>
       <div class="field-grid field-grid--compact">
         <div class="field field--stack field--span-2">
           <span class="field__label">Apostrophe strategy</span>
@@ -352,73 +347,73 @@
     </section>
 
     <section class="form-section">
-      <h3 class="form-section__title">Entities &amp; casting</h3>
+      <h3 class="form-section__title">Personagens e narrador</h3>
       <div class="field-grid field-grid--compact">
         <div class="field field--stack field--span-2">
-          <label for="speaker_config">Speaker preset</label>
+          <label for="speaker_config">Preset de personagens</label>
           <select id="speaker_config" name="speaker_config" {{ 'disabled' if readonly else '' }}>
-            <option value="">None</option>
+            <option value="">Nenhum</option>
             {% for config in options.speaker_configs %}
             <option value="{{ config.name }}" {% if selected_config == config.name %}selected{% endif %}>{{ config.name }} · {{ config.speakers|length }} speaker{% if config.speakers|length != 1 %}s{% endif %}</option>
             {% endfor %}
           </select>
-          <p class="hint">Reuse a saved roster to keep character voices consistent.</p>
+          <p class="hint">Reutilize um conjunto salvo de personagens para manter vozes consistentes.</p>
         </div>
         <div class="field">
-          <label for="chunk_level">Chunk granularity</label>
+          <label for="chunk_level">Granularidade de trecho</label>
           <select id="chunk_level" name="chunk_level" {{ 'disabled' if readonly else '' }}>
             {% for option in options.chunk_levels %}
             <option value="{{ option.value }}" {% if chunk_level_value == option.value %}selected{% endif %}>{{ option.label }}</option>
             {% endfor %}
           </select>
-          <p class="hint">Paragraphs work well for long-form narration; sentences give finer subtitle sync.</p>
+          <p class="hint">Parágrafos funcionam bem para narração longa; sentenças dão sincronização mais precisa de legendas.</p>
         </div>
         <div class="field">
-          <label for="speaker_analysis_threshold">Minimum mentions</label>
+          <label for="speaker_analysis_threshold">Menções mínimas</label>
           <input type="number" min="1" max="25" id="speaker_analysis_threshold" name="speaker_analysis_threshold" value="{{ analysis_threshold_value }}" {{ 'disabled' if readonly else '' }}>
-          <p class="hint">Entities appearing less often fall back to the narrator voice.</p>
+          <p class="hint">Personagens com menos menções usam a voz do narrador.</p>
         </div>
         <div class="field">
-          <label for="chapter_intro_delay">Pause after chapter titles (seconds)</label>
+          <label for="chapter_intro_delay">Pausa após título do capítulo (seg.)</label>
           <input type="number" step="0.1" min="0" id="chapter_intro_delay" name="chapter_intro_delay" value="{{ '%.2f'|format(chapter_delay_value|float if chapter_delay_value is not none else 0.5) }}" {{ 'disabled' if readonly else '' }}>
-          <p class="hint">Set to 0 to disable the pause after speaking each chapter title.</p>
+          <p class="hint">Use 0 para não pausar após o título de cada capítulo.</p>
         </div>
         <div class="field field--stack">
           <label class="toggle-pill">
             <input type="hidden" name="read_title_intro" value="false">
             <input type="checkbox" name="read_title_intro" value="true" {% if read_title_intro %}checked{% endif %} {{ 'disabled' if readonly else '' }}>
-            <span>Read title and authors before narration</span>
+            <span>Narrar título e autores antes do início</span>
           </label>
-          <p class="hint">When enabled, the narrator speaks the book title and author list before chapter one begins.</p>
+          <p class="hint">Quando ativo, o narrador lê o título e os autores antes do capítulo um.</p>
         </div>
         <div class="field field--stack">
           <label class="toggle-pill">
             <input type="hidden" name="read_closing_outro" value="false">
             <input type="checkbox" name="read_closing_outro" value="true" {% if read_closing_outro %}checked{% endif %} {{ 'disabled' if readonly else '' }}>
-            <span>Read closing outro after narration</span>
+            <span>Narrar encerramento após o final</span>
           </label>
-          <p class="hint">Adds a short "The end" statement after the final chapter, including series details when available.</p>
+          <p class="hint">Adiciona um "Fim" após o último capítulo, com detalhes da série quando disponível.</p>
         </div>
         <div class="field field--stack">
           <label class="toggle-pill">
             <input type="hidden" name="normalize_chapter_opening_caps" value="false">
             <input type="checkbox" name="normalize_chapter_opening_caps" value="true" {% if normalize_chapter_opening_caps %}checked{% endif %} {{ 'disabled' if readonly else '' }}>
-            <span>Normalize ALL CAPS chapter openings</span>
+            <span>Normalizar capítulos em MAIÚSCULAS</span>
           </label>
-          <p class="hint">Converts opening sentences written in uppercase to sentence case while keeping acronyms like AI intact.</p>
+          <p class="hint">Converte frases de abertura em caixa alta para formato normal, preservando siglas como IA.</p>
         </div>
       </div>
     </section>
   </div>
   <footer class="modal__footer wizard-card__footer">
     <div class="wizard-card__footer-actions">
-      <button type="button" class="button button--ghost" data-role="wizard-cancel" data-pending-id="{{ pending.id if pending else '' }}">Cancel</button>
+      <button type="button" class="button button--ghost" data-role="wizard-cancel" data-pending-id="{{ pending.id if pending else '' }}">Cancelar</button>
     </div>
     <div class="wizard-card__footer-actions">
       {% if readonly %}
       <button type="button" class="button" data-role="wizard-back" data-target-step="chapters" data-pending-id="{{ pending.id if pending else '' }}">Return to chapters</button>
       {% else %}
-      <button type="submit" class="button" data-step-target="chapters">Chapter selection</button>
+      <button type="submit" class="button" data-step-target="chapters">Selecionar capítulos</button>
       {% endif %}
     </div>
   </footer>
